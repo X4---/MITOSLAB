@@ -65,6 +65,7 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
+<<<<<<< HEAD
 	
 	extern uint32_t idt_entries[];
     int i = 0;
@@ -90,6 +91,8 @@ trap_init(void)
     gdt[GD_TSS0 >> 3].sd_s = 0;
 
     ltr(GD_TSS0);
+=======
+>>>>>>> lab3
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -169,7 +172,10 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> lab3
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)

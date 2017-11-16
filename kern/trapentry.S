@@ -10,10 +10,23 @@
 # exceptions/interrupts
 ###################################################################
 
+<<<<<<< HEAD
 /* The TRAPHANDLER macro defines a globally-visible function for handling
  * a trap.  It pushes a trap number onto the stack, then jumps to _alltraps.
  * Use TRAPHANDLER for traps where the CPU automatically pushes an error code.
  */ 
+=======
+/* TRAPHANDLER defines a globally-visible function for handling a trap.
+ * It pushes a trap number onto the stack, then jumps to _alltraps.
+ * Use TRAPHANDLER for traps where the CPU automatically pushes an error code.
+ *
+ * You shouldn't call a TRAPHANDLER function from C, but you may
+ * need to _declare_ one in C (for instance, to get a function pointer
+ * during IDT setup).  You can declare the function with
+ *   void NAME();
+ * where NAME is the argument passed to TRAPHANDLER.
+ */
+>>>>>>> lab3
 #define TRAPHANDLER(name, num)						\
 	.globl name;		/* define global symbol for 'name' */	\
 	.type name, @function;	/* symbol type is function */		\
@@ -41,6 +54,7 @@
  * Lab 3: Your code here for generating entry points for the different traps.
  */
 
+<<<<<<< HEAD
 	TRAPHANDLER_NOEC(divide_error, T_DIVIDE)				# divide error
 	TRAPHANDLER_NOEC(debug, T_DEBUG)						# debug exception
 	TRAPHANDLER_NOEC(nmi, T_NMI)							# non-maskable interrupt
@@ -559,10 +573,14 @@ idt_entries:
   .long trap_handler_placeholder253
   .long trap_handler_placeholder254
   .long trap_handler_placeholder255
+=======
+
+>>>>>>> lab3
 
 /*
  * Lab 3: Your code here for _alltraps
  */
+<<<<<<< HEAD
 .text
 .globl _alltraps
 _alltraps:
@@ -595,4 +613,6 @@ _alltraps:
   iret
 
 
+=======
+>>>>>>> lab3
 
