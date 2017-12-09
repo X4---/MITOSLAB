@@ -125,6 +125,7 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	info->eip_fn_addr = addr;
 	info->eip_fn_narg = 0;
 
+	cprintf("addr is %08x\n", addr);
 	// Find the relevant set of stabs
 	if (addr >= ULIM) {
 		stabs = __STAB_BEGIN__;
@@ -142,14 +143,30 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 		// Make sure this memory is valid.
 		// Return -1 if it is not.  Hint: Call user_mem_check.
 		// LAB 3: Your code here.
+		
+		if(user_mem_check(curenv, (const void* )USTABDATA, sizeof(struct UserStabData) , PTE_U ))
+		{
+			return -1;
+		}
 
 		stabs = usd->stabs;
 		stab_end = usd->stab_end;
 		stabstr = usd->stabstr;
 		stabstr_end = usd->stabstr_end;
+		
+		cprintf("stabs pos is %08x\n", stabs);
+		cprintf("stabsend pos is %08x\n", stab_end);
+		cprintf("stabstr pos is %08x\n", stabstr);
+		cprintf("stabstrend pos is %08x\n", stabstr_end);
 
 		// Make sure the STABS and string table memory is valid.
 		// LAB 3: Your code here.
+
+		if(user_mem_check(curenv, (const void *)stabs, stab_end - stabs, PTE_U)
+		||user_mem_check(curenv, (const void *)stabstr, stabstr_end - stabstr, PTE_U ))
+		{
+			return -1;
+		}
 	}
 
 	// String table validity checks
@@ -161,9 +178,30 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	// Then, we look in that source file for the function.  Then we look
 	// for the line number.
 
+	cprintf("return at 176\n");
 	// Search the entire set of stabs for the source file (type N_SO).
 	lfile = 0;
 	rfile = (stab_end - stabs) - 1;
+
+// 	struct Stab {
+// 	uint32_t n_strx;	// index into string table of name
+// 	uint8_t n_type;         // type of symbol
+// 	uint8_t n_other;        // misc info (usually empty)
+// 	uint16_t n_desc;        // description field
+// 	uintptr_t n_value;	// value of symbol
+// };
+	int i = 0;
+	for(; i <=rfile; ++i)
+	{
+		struct Stab *temp = (struct Stab*)(stabs + i);
+
+		cprintf("Index :%04d Type :%04d Address :%08x\n", temp->n_strx,
+			temp->n_type, temp->n_value);
+	}
+
+	cprintf("Count is %d\n", rfile + 1);
+
+
 	stab_binsearch(stabs, &lfile, &rfile, N_SO, addr);
 	if (lfile == 0)
 		return -1;
