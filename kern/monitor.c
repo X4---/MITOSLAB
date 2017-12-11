@@ -62,27 +62,11 @@ int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
 	// Your code here.
-    //unsigned int *p  = (unsigned int*) read_ebp();
-    //unsigned int eip = read_eip();
-
-	//cprintf("current eip=%08x", eip);
 	
 	uintptr_t eip = tf->tf_eip;
 	struct Eipdebuginfo info;
     debuginfo_eip(eip, &info);
-    //cprintf("\n");
-    // do
-    // {
-    //     p = dump_stack(p);
-    // }while(p);
-
-    // cprintf("\n");
-    // p = (unsigned int*)read_ebp();
-    // do
-    // {
-    //     p = dump_backstrace_symbols(p);
-    // }while(p);
-
+    
 	return 0;
 }
 
