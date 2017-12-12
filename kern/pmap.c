@@ -162,10 +162,6 @@ mem_init(void)
 	envs = (struct Env *)boot_alloc(envsize);
 
 	//////////////////////////////////////////////////////////////////////
-	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
-	// LAB 3: Your code here.
-
-	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
 	// up the list of free physical pages. Once we've done so, all further
 	// memory management will go through the page_* functions. In
@@ -197,27 +193,6 @@ mem_init(void)
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
 	boot_map_region(kern_pgdir, UENVS, ROUNDUP(envsize, PGSIZE), PADDR(envs), PTE_U | PTE_P);
-
-	//////////////////////////////////////////////////////////////////////
-	// Map the 'envs' array read-only by the user at linear address UENVS
-	// (ie. perm = PTE_U | PTE_P).
-	// Permissions:
-	//    - the new image at UENVS  -- kernel R, user R
-	//    - envs itself -- kernel RW, user NONE
-	// LAB 3: Your code here.
-
-	//////////////////////////////////////////////////////////////////////
-	// Use the physical memory that 'bootstack' refers to as the kernel
-	// stack.  The kernel stack grows down from virtual address KSTACKTOP.
-	// We consider the entire range from [KSTACKTOP-PTSIZE, KSTACKTOP)
-	// to be the kernel stack, but break this into two pieces:
-	//     * [KSTACKTOP-KSTKSIZE, KSTACKTOP) -- backed by physical memory
-	//     * [KSTACKTOP-PTSIZE, KSTACKTOP-KSTKSIZE) -- not backed; so if
-	//       the kernel overflows its stack, it will fault rather than
-	//       overwrite memory.  Known as a "guard page".
-	//     Permissions: kernel RW, user NONE
-	// Your code goes here:
-	boot_map_region(kern_pgdir, KSTACKTOP-KSTKSIZE, ROUNDUP(KSTKSIZE, PGSIZE), PADDR(bootstack), PTE_W | PTE_P);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
@@ -280,6 +255,16 @@ mem_init_mp(void)
 	//
 	// LAB 4: Your code here:
 
+	int i = 0;
+	for(; i< NCPU; ++i)
+	{
+		uintptr_t tarva = KSTACKTOP-KSTKSIZE - i * (KSTKSIZE + KSTKGAP);
+		physaddr_t tarpa = PADDR(percpu_kstacks[i]);
+		boot_map_region(kern_pgdir, tarva, ROUNDUP(KSTKSIZE, PGSIZE), tarpa, PTE_W | PTE_P);
+		
+	}
+	
+
 }
 
 // --------------------------------------------------------------
@@ -322,6 +307,7 @@ page_init(void)
 	size_t IOPHYSMEMIndex = IOPHYSMEM / PGSIZE;
 	size_t EXTPHYSMEMIndex = EXTPHYSMEM / PGSIZE;
 	size_t USEDIndex = (size_t)(PADDR(boot_alloc(0))) /PGSIZE;
+	size_t USEDMPENTRYIndex = (size_t)MPENTRY_PADDR /PGSIZE;
 	page_free_list = NULL;
 	for (i = 0; i < npages; i++) {
 		pages[i].pp_ref = 0;
@@ -334,6 +320,9 @@ page_init(void)
 		{
 			pages[i].pp_ref = 1;
 		}else if (i >= EXTPHYSMEMIndex && i < USEDIndex)
+		{
+			pages[i].pp_ref = 1;
+		}else if (i == USEDMPENTRYIndex)
 		{
 			pages[i].pp_ref = 1;
 		}
@@ -609,7 +598,7 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// tables provide bits for this purpose; simply create the
 	// mapping with PTE_PCD|PTE_PWT (cache-disable and
 	// write-through) in addition to PTE_W.  (If you're interested
-	// in more details on this, see section 10.5 of IA32 volume
+	// in more details on this, see section 10.5 of IA32 volumem
 	// 3A.)
 	//
 	// Be sure to round size up to a multiple of PGSIZE and to
@@ -619,7 +608,17 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+	//panic("mmio_map_region not implemented");
+	
+	uintptr_t tarva = base;
+	size_t pagedsize= ROUNDUP(size, PGSIZE); 
+	if(tarva + pagedsize > MMIOLIM)
+	{
+		panic("MMIO overflow at %08x\n", tarva);
+	}
+	boot_map_region(kern_pgdir, tarva, pagedsize, pa, PTE_PCD | PTE_PWT);
+	base = tarva + pagedsize;
+	return (void *)tarva;
 }
 
 static uintptr_t user_mem_check_addr;
