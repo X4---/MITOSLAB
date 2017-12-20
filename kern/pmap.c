@@ -258,9 +258,12 @@ mem_init_mp(void)
 	int i = 0;
 	for(; i< NCPU; ++i)
 	{
-		uintptr_t tarva = KSTACKTOP-KSTKSIZE - i * (KSTKSIZE + KSTKGAP);
-		physaddr_t tarpa = PADDR(percpu_kstacks[i]);
-		boot_map_region(kern_pgdir, tarva, ROUNDUP(KSTKSIZE, PGSIZE), tarpa, PTE_W | PTE_P);
+		uintptr_t kstacktop_i = KSTACKTOP - i * (KSTKSIZE + KSTKGAP);
+		boot_map_region(kern_pgdir, 
+			kstacktop_i - KSTKSIZE,
+			ROUNDUP(KSTKSIZE, PGSIZE),
+			PADDR(&percpu_kstacks[i]),
+			PTE_W | PTE_P);
 		
 	}
 	
@@ -610,15 +613,16 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Your code here:
 	//panic("mmio_map_region not implemented");
 	
-	uintptr_t tarva = base;
-	size_t pagedsize= ROUNDUP(size, PGSIZE); 
-	if(tarva + pagedsize > MMIOLIM)
+	void * ret = (void *)base;
+	size = ROUNDUP(size, PGSIZE);
+
+	if(base + size > MMIOLIM || base + size < base)
 	{
-		panic("MMIO overflow at %08x\n", tarva);
+		panic("MMIO overflow\n");
 	}
-	boot_map_region(kern_pgdir, tarva, pagedsize, pa, PTE_PCD | PTE_PWT);
-	base = tarva + pagedsize;
-	return (void *)tarva;
+	boot_map_region(kern_pgdir, base, size, pa, PTE_PCD | PTE_PWT | PTE_W | PTE_P);
+	base += size;
+	return (void *)ret;
 }
 
 static uintptr_t user_mem_check_addr;
