@@ -294,6 +294,12 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 			return sys_env_destroy(a1);
 		}
 		break;
+		case SYS_yield:
+		{
+			sys_yield();
+			return 0;
+		}
+		break;
 		case NSYSCALLS:
 		{
 			return E_INVAL;
