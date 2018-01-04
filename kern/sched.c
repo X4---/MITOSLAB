@@ -13,7 +13,7 @@ sched_yield(void)
 {
 	struct Env *idle;
 	
-
+	//cprintf("sched at %d CPU\n", thiscpu->cpu_id);
 	// Implement simple round-robin scheduling.
 	//
 	// Search through 'envs' for an ENV_RUNNABLE environment in
