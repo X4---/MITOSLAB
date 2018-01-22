@@ -92,9 +92,15 @@ sys_exofork(void)
 	{
 		newENV->env_status = ENV_NOT_RUNNABLE;
 		memcpy(&newENV->env_tf, &curenv->env_tf, sizeof(newENV->env_tf));
+		(newENV->env_tf).tf_regs.reg_eax = 0;
 	}
 
-	return result;
+	if(result < 0)
+	{
+		return result;
+	}
+
+	return newENV->env_id;
 
 }
 
@@ -113,11 +119,12 @@ sys_env_set_status(envid_t envid, int status)
 	// You should set envid2env's third argument to 1, which will
 	// check whether the current environment has permission to set
 	// envid's status.
-
+	//cprintf("ID is %d, status is %d\n", envid, status);
 	// LAB 4: Your code here.
 
-	if( status != ENV_RUNNABLE || status != ENV_NOT_RUNNABLE)
+	if( status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE)
 	{
+		//panic("aaa");
 		return -E_INVAL;
 	}
 
@@ -126,10 +133,13 @@ sys_env_set_status(envid_t envid, int status)
 
 	if(result == -E_BAD_ENV)
 	{
+		//panic("bbb");
 		return -E_BAD_ENV;
 	}
 
 	tarEnv->env_status = status;
+	
+	return 0;
 	//panic("sys_env_set_status not implemented");
 }
 
@@ -193,6 +203,10 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 
 	if(result == -E_BAD_ENV)
 	{
+		tarEnv = &envs[ENVX(envid)];
+		cprintf("status is %d\n", tarEnv->env_status);
+		cprintf("id is %d\n", tarEnv->env_id);
+		panic("envid is %d va is %d \n", envid);
 		return -E_BAD_ENV;
 	}
 
@@ -225,7 +239,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 		return -E_INVAL;
 	}
 
-	
+	return 0;
 }
 
 // Map the page of memory at 'srcva' in srcenvid's address space
