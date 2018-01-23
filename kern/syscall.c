@@ -165,6 +165,8 @@ sys_env_set_pgfault_upcall(envid_t envid, void *func)
 		return -E_BAD_ENV;
 	}
 
+
+	cprintf("env :%08x register upcall at %08x\n", envid, func);
 	tarEnv->env_pgfault_upcall = func;
 
 	return 0;

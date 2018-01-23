@@ -358,7 +358,7 @@ page_fault_handler(struct Trapframe *tf)
 			utf = (struct UTrapframe *)( tf->tf_esp - 4 - sizeof(struct UTrapframe));
 		}else
 		{
-			utf = (struct UTrapframe *)( tf->tf_esp - sizeof(struct UTrapframe));
+			utf = (struct UTrapframe *)( UXSTACKTOP - sizeof(struct UTrapframe));
 		}
 
 		user_mem_assert(curenv, (const void *)utf, sizeof(struct UTrapframe), PTE_W);
@@ -372,7 +372,7 @@ page_fault_handler(struct Trapframe *tf)
 
 		tf->tf_esp = (uint32_t)utf;
 		tf->tf_eip = (uint32_t)curenv->env_pgfault_upcall;
-
+		cprintf("utf pos is %08x\n", utf);
 		env_run(curenv);
 	}
 
