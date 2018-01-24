@@ -70,7 +70,7 @@ _pgfault_upcall:
 	
 	movl 0x30(%esp), %eax	// trap time esp at esp + 48(0x30)
 	movl 0x28(%esp), %ebx	// trap time eip at esp + 40(0x28)
-	subl 0x4, %eax
+	subl $0x4, %eax
 	movl %ebx, (%eax)		//push trap time eip to trap time %esp
 	movl %eax, 0x30(%esp)	//modify trap time esp to new esp
 
@@ -78,7 +78,7 @@ _pgfault_upcall:
 	// can no longer modify any general-purpose registers.
 	// LAB 4: Your code here.
 
-	addl 0x8, %esp			//ignore argus let stack begin at pushregs
+	addl $0x8, %esp			//ignore argus let stack begin at pushregs
 	popal
 
 	// Restore eflags from the stack.  After you do this, you can
@@ -86,7 +86,7 @@ _pgfault_upcall:
 	// modifies eflags.
 	// LAB 4: Your code here.
 
-	addl 0x4, %esp			//ignore eip
+	addl $0x4, %esp			//ignore eip
 	popfl
 
 	// Switch back to the adjusted trap-time stack.

@@ -212,6 +212,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 		return -E_BAD_ENV;
 	}
 
+	cprintf("Alloc at va:%08x \n", va);
 	if( (int)va >= UTOP || (int)va % PGSIZE != 0)
 	{
 		return -E_INVAL;

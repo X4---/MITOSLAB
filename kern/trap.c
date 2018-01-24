@@ -372,7 +372,10 @@ page_fault_handler(struct Trapframe *tf)
 
 		tf->tf_esp = (uint32_t)utf;
 		tf->tf_eip = (uint32_t)curenv->env_pgfault_upcall;
-		cprintf("utf pos is %08x\n", utf);
+		//cprintf("utf pos is %08x\n", utf);
+		//cprintf("utf fault va is %08x\n", fault_va);
+		cprintf("tf eip is %08x\n", tf->tf_eip);
+		cprintf("tf esp is %08x\n", tf->tf_esp);
 		env_run(curenv);
 	}
 

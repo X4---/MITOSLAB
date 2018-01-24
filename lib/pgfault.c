@@ -26,7 +26,6 @@ set_pgfault_handler(void (*handler)(struct UTrapframe *utf))
 {
 	int r;
 
-	envid_t thisEnvid = sys_getenvid();
 	if (_pgfault_handler == 0) {
 		// First time through!
 		// LAB 4: Your code here.
@@ -36,7 +35,7 @@ set_pgfault_handler(void (*handler)(struct UTrapframe *utf))
 		{
 
 		}
-		if(( r = sys_env_set_pgfault_upcall(thisEnvid, (void*)_pgfault_upcall)))
+		if(( r = sys_env_set_pgfault_upcall(0, (void*)_pgfault_upcall)))
 		{
 
 		};
