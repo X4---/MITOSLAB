@@ -214,6 +214,10 @@ trap_dispatch(struct Trapframe *tf)
                             tf->tf_regs.reg_edi,
                             tf->tf_regs.reg_esi);
 				return ;
+		case IRQ_TIMER + IRQ_OFFSET:
+				lapic_eoi();
+				sched_yield();
+				return;
     }
 	// Handle spurious interrupts
 	// The hardware sometimes raises these because of noise on the
