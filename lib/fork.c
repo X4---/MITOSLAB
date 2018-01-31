@@ -90,7 +90,8 @@ duppage(envid_t envid, unsigned pn)
 		perm |= PTE_COW;
 	}
 
-	if(( r = sys_page_map( myenvid, addr, envid, addr, perm) < 0))
+	cprintf("duppage at %08x\n", addr);
+	if(( r = sys_page_map( myenvid, addr, envid, addr, PTE_P|PTE_U|PTE_COW) < 0))
 	{
 		panic("duppage : page maping failed %e\n", r);
 		return r;
@@ -130,11 +131,7 @@ envid_t
 fork(void)
 {
 	// LAB 4: Your code here.
-	//panic("fork not implemented");
-
-	//panic("fork not implemented");
-	
-	//sys_env_set_pgfault_upcall(0, _pgfault_upcall);
+	set_pgfault_handler(pgfault);
 
 	envid_t envid = sys_exofork();
 	uint32_t addr;
@@ -149,6 +146,7 @@ fork(void)
 	}
 
 	int va, pn;
+	//cprintf("uvpt is %08x uvpd is %08x\n", uvpt, uvpd);
 
 	for( va = 0; va < UTOP ; va += PGSIZE)
 	{
@@ -176,10 +174,14 @@ fork(void)
 		panic("fork : map childeenv UXSTACKTOP to father PFTEMP failed %e\n", r);
 	}
 	memmove((void *)(UXSTACKTOP - PGSIZE), PFTEMP, PGSIZE);
-
+	if(( r = sys_page_unmap(0, PFTEMP)) < 0)
+	{
+		panic("fork : unmap failed %e\n", r);
+	}
 	extern void _pgfault_upcall(void);
 	sys_env_set_pgfault_upcall(envid, _pgfault_upcall);
 
+	cprintf("At this\n");
 	if(( r = sys_env_set_status( envid, ENV_RUNNABLE) < 0))
 	{
 		panic("fork : set child status failed %e\n", r);
