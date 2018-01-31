@@ -166,7 +166,7 @@ sys_env_set_pgfault_upcall(envid_t envid, void *func)
 	}
 
 
-	cprintf("env :%08x register upcall at %08x\n", envid, func);
+	//cprintf("env :%08x register upcall at %08x\n", envid, func);
 	tarEnv->env_pgfault_upcall = func;
 
 	return 0;
@@ -212,7 +212,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 		return -E_BAD_ENV;
 	}
 
-	cprintf("Alloc at va:%08x \n", va);
+	//cprintf("Alloc at va:%08x \n", va);
 	if( (int)va >= UTOP || (int)va % PGSIZE != 0)
 	{
 		return -E_INVAL;

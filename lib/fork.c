@@ -90,7 +90,7 @@ duppage(envid_t envid, unsigned pn)
 		perm |= PTE_COW;
 	}
 
-	cprintf("duppage at %08x\n", addr);
+	//cprintf("duppage at %08x\n", addr);
 	if(( r = sys_page_map( myenvid, addr, envid, addr, PTE_P|PTE_U|PTE_COW) < 0))
 	{
 		panic("duppage : page maping failed %e\n", r);
@@ -181,7 +181,7 @@ fork(void)
 	extern void _pgfault_upcall(void);
 	sys_env_set_pgfault_upcall(envid, _pgfault_upcall);
 
-	cprintf("At this\n");
+	//cprintf("At this\n");
 	if(( r = sys_env_set_status( envid, ENV_RUNNABLE) < 0))
 	{
 		panic("fork : set child status failed %e\n", r);
