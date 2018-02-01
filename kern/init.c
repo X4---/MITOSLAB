@@ -44,13 +44,12 @@ i386_init(void)
 	// Lab 4 multiprocessor initialization functions
 	mp_init();
 	lapic_init();
-
 	// Lab 4 multitasking initialization functions
 	pic_init();
 
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
-
+	lock_kernel();
 	// Starting non-boot CPUs
 	boot_aps();
 
@@ -122,9 +121,10 @@ mp_main(void)
 	// only one CPU can enter the scheduler at a time!
 	//
 	// Your code here:
-
+	lock_kernel();
+	sched_yield();
 	// Remove this after you finish Exercise 4
-	for (;;);
+	//for (;;);
 }
 
 /*

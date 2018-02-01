@@ -67,7 +67,7 @@ lapic_init(void)
 
 	// The timer repeatedly counts down at bus frequency
 	// from lapic[TICR] and then issues an interrupt.  
-	// If we cared more about precise timekeeping,
+	// If we cared more about precise timmekeeping,
 	// TICR would be calibrated using an external time source.
 	lapicw(TDCR, X1);
 	lapicw(TIMER, PERIODIC | (IRQ_OFFSET + IRQ_TIMER));

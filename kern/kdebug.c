@@ -19,7 +19,6 @@ struct UserStabData {
 	const char *stabstr_end;
 };
 
-
 // stab_binsearch(stabs, region_left, region_right, type, addr)
 //
 //	Some stab types are arranged in increasing order by instruction
@@ -125,6 +124,7 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	info->eip_fn_addr = addr;
 	info->eip_fn_narg = 0;
 
+	cprintf("addr is %08x\n", addr);
 	// Find the relevant set of stabs
 	if (addr >= ULIM) {
 		stabs = __STAB_BEGIN__;
@@ -142,14 +142,30 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 		// Make sure this memory is valid.
 		// Return -1 if it is not.  Hint: Call user_mem_check.
 		// LAB 3: Your code here.
+		
+		if(user_mem_check(curenv, (const void* )USTABDATA, sizeof(struct UserStabData) , PTE_U ))
+		{
+			return -1;
+		}
 
 		stabs = usd->stabs;
 		stab_end = usd->stab_end;
 		stabstr = usd->stabstr;
 		stabstr_end = usd->stabstr_end;
+		
+		cprintf("stabs pos is %08x\n", stabs);
+		cprintf("stabsend pos is %08x\n", stab_end);
+		cprintf("stabstr pos is %08x\n", stabstr);
+		cprintf("stabstrend pos is %08x\n", stabstr_end);
 
 		// Make sure the STABS and string table memory is valid.
 		// LAB 3: Your code here.
+
+		if(user_mem_check(curenv, (const void *)stabs, stab_end - stabs, PTE_U)
+		||user_mem_check(curenv, (const void *)stabstr, stabstr_end - stabstr, PTE_U ))
+		{
+			return -1;
+		}
 	}
 
 	// String table validity checks
@@ -161,12 +177,54 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	// Then, we look in that source file for the function.  Then we look
 	// for the line number.
 
+	cprintf("return at 176\n");
 	// Search the entire set of stabs for the source file (type N_SO).
 	lfile = 0;
 	rfile = (stab_end - stabs) - 1;
+
+// 	struct Stab {
+// 	uint32_t n_strx;	// index into string table of name
+// 	uint8_t n_type;         // type of symbol
+// 	uint8_t n_other;        // misc info (usually empty)
+// 	uint16_t n_desc;        // description field
+// 	uintptr_t n_value;	// value of symbol
+// };
+	int i = 0;
+	for(; i <=rfile; ++i)
+	{
+		struct Stab *temp = (struct Stab*)(stabs + i);
+
+		//cprintf("Index :%04d Type :%04d Address :%08x\n", temp->n_strx,
+		//	temp->n_type, temp->n_value);
+	}
+
+	cprintf("Count is %d\n", rfile + 1);
+
+
 	stab_binsearch(stabs, &lfile, &rfile, N_SO, addr);
 	if (lfile == 0)
 		return -1;
+	
+	struct Stab *temp = (struct Stab*)(stabs + lfile);
+	cprintf("lfile :%04d- Index :%04d Type :%04x Address :%08x\n", lfile, temp->n_strx,
+			temp->n_type, temp->n_value);
+
+	temp = (struct Stab*)(stabs + rfile);
+	cprintf("rfile :%04d- Index :%04d Type :%04x Address :%08x\n", rfile, temp->n_strx,
+			temp->n_type, temp->n_value);
+
+	i = lfile;
+	for(; i <=rfile; ++i)
+	{
+		struct Stab *temp = (struct Stab*)(stabs + i);
+
+		cprintf("logiccount :%04d- Index :%04d Type :%04x Address :%08x\n", i, temp->n_strx,
+			temp->n_type, temp->n_value);
+	}
+
+	temp = (struct Stab*)(stabs + i);
+	cprintf("logiccount :%04d- Index :%04d Type :%04x Address :%08x\n", i, temp->n_strx,
+				temp->n_type, temp->n_value);
 
 	// Search within that file's stabs for the function definition
 	// (N_FUN).
@@ -205,6 +263,17 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	//	which one.
 	// Your code here.
 
+	stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
+	if(lline <= rline)
+	{
+		info->eip_line = rline;
+		// temp = (struct Stab*)(stabs + rline);
+		// cprintf("Index :%04d Type :%04x Other :%04d nDes :%8x Address :%08x\n", temp->n_strx,
+		// 		temp->n_type, temp->n_other, temp->n_desc ,temp->n_value);
+	}else
+	{
+		return -1;
+	}
 
 	// Search backwards from the line number for the relevant filename
 	// stab.
@@ -226,6 +295,19 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 		     lline < rfun && stabs[lline].n_type == N_PSYM;
 		     lline++)
 			info->eip_fn_narg++;
+
+	// const char *eip_file;		// Source code filename for EIP
+	// int eip_line;			// Source code linenumber for EIP
+
+	// const char *eip_fn_name;	// Name of function containing EIP
+	// 				//  - Note: not null terminated!
+	// int eip_fn_namelen;		// Length of function name
+	// uintptr_t eip_fn_addr;		// Address of start of function
+	// int eip_fn_narg;		// Number of function arguments
+	cprintf("info->eip_file is %s\n", info->eip_file);
+	cprintf("info->eip_line stab is %d\n", info->eip_line);
+	cprintf("info->eip_line is %d\n", stabs[info->eip_line].n_desc);
+	//cpritnf("info->")
 
 	return 0;
 }

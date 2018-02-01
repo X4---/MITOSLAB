@@ -25,6 +25,8 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "backtrace", "Display information about the backtrace", mon_backtrace },
+	{ "mem", "Dispaly information about the mem k-kernl u-user s-stab", mon_kernelMemLayout },
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -60,9 +62,114 @@ int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
 	// Your code here.
+	
+	uintptr_t eip = tf->tf_eip;
+	struct Eipdebuginfo info;
+    debuginfo_eip(eip, &info);
+    
 	return 0;
 }
 
+int
+mon_kernelMemLayout(int argc, char **argv, struct Trapframe *tf)
+{
+	int mode = 1;
+
+	if(argc > 1)
+	{
+		cprintf(argv[1]);
+		if(argv[1][0] == 'k')
+		{
+			mode |= 1;
+		}else if(argv[1][0] == 'u')
+		{
+			mode |= 2;
+		}else if(argv[1][0] == 's')
+		{
+			mode |= 4;
+		}
+	}
+
+	if((mode & 1) != 0)
+	{
+			cprintf(
+			"*\n"
+			"* Virtual memory map:                                Permissions\n"
+			"*                                                    kernel/user\n"
+			"*\n"
+			"*    4 Gig -------->  +------------------------------+\n"
+			"*                     |                              | RW/--\n"
+			"*                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+			"*                     :              .               :\n"
+			"*                     :              .               :\n"
+			"*                     :              .               :\n"
+			"*                     |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| RW/--\n"
+			"*                     |                              | RW/--\n"
+			"*                     |   Remapped Physical Memory   | RW/--\n"
+			"*                     |                              | RW/--\n"
+			"*    KERNBASE, ---->  +------------------------------+ 0xf0000000      --+\n"
+			"*    KSTACKTOP        |     CPU0's Kernel Stack      | RW/--  KSTKSIZE   |\n"
+			"*                     | - - - - - - - - - - - - - - -|                   |\n"
+			"*                     |      Invalid Memory (*)      | --/--  KSTKGAP    |\n"
+			"*                     +------------------------------+                   |\n"
+			"*                     |     CPU1's Kernel Stack      | RW/--  KSTKSIZE   |\n"
+			"*                     | - - - - - - - - - - - - - - -|                 PTSIZE\n"
+			"*                     |      Invalid Memory (*)      | --/--  KSTKGAP    |\n"
+			"*                     +------------------------------+                   |\n"
+			"*                     :              .               :                   |\n"
+			"*                     :              .               :                   |\n"
+			"*    MMIOLIM ------>  +------------------------------+ 0xefc00000      --+\n"
+			"*                     |       Memory-mapped I/O      | RW/--  PTSIZE\n"
+			"* ULIM, MMIOBASE -->  +------------------------------+ 0xef800000\n"
+			);
+	}
+	if((mode & 2) != 0)
+	{
+			cprintf(
+			"*   MMIOLIM ------>  +------------------------------+ 0xefc00000      --+\n"
+			"*                     |       Memory-mapped I/O      | RW/--  PTSIZE\n"
+			"* ULIM, MMIOBASE -->  +------------------------------+ 0xef800000\n"
+			"*                     |  Cur. Page Table (User R-)   | R-/R-  PTSIZE\n"
+			"*    UVPT      ---->  +------------------------------+ 0xef400000\n"
+			"*                     |          RO PAGES            | R-/R-  PTSIZE\n"
+			"*    UPAGES    ---->  +------------------------------+ 0xef000000\n"
+			"*                     |           RO ENVS            | R-/R-  PTSIZE\n"
+			"* UTOP,UENVS ------>  +------------------------------+ 0xeec00000\n"
+			"* UXSTACKTOP -/       |     User Exception Stack     | RW/RW  PGSIZE\n"
+			"*                     +------------------------------+ 0xeebff000\n"
+			"*                     |       Empty Memory (*)       | --/--  PGSIZE\n"
+			"*    USTACKTOP  --->  +------------------------------+ 0xeebfe000\n"
+			"*                     |      Normal User Stack       | RW/RW  PGSIZE\n"
+			"*                     +------------------------------+ 0xeebfd000\n"
+			"*                     |                              |\n"
+			"*                     |                              |\n"
+			"*                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+			"*                     .                              .\n"
+			"*                     .                              .\n"
+			);
+	}
+	if((mode & 4) != 0)
+	{
+			cprintf(
+			"*                     .                              .\n"
+			"*                     .                              .\n"
+			"*                     |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|\n"
+			"*                     |     Program Data & Heap      |\n"
+			"*    UTEXT -------->  +------------------------------+ 0x00800000\n"
+			"*    PFTEMP ------->  |       Empty Memory (*)       |        PTSIZE\n"
+			"*                     |                              |\n"
+			"*    UTEMP -------->  +------------------------------+ 0x00400000      --+\n"
+			"*                     |       Empty Memory (*)       |                   |\n"
+			"*                     | - - - - - - - - - - - - - - -|                   |\n"
+			"*                     |  User STAB Data (optional)   |                 PTSIZE\n"
+			"*    USTABDATA ---->  +------------------------------+ 0x00200000        |\n"
+			"*                     |       Empty Memory (*)       |                   |\n"
+			"*    0 ------------>  +------------------------------+                 --+\n"
+			);
+	}
+
+	return 0;
+}
 
 
 /***** Kernel monitor command interpreter *****/

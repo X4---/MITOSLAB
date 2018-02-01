@@ -49,16 +49,7 @@ endif
 
 # try to infer the correct QEMU
 ifndef QEMU
-QEMU := $(shell if which qemu > /dev/null; \
-	then echo qemu; exit; \
-	else \
-	qemu=/Applications/Q.app/Contents/MacOS/i386-softmmu.app/Contents/MacOS/i386-softmmu; \
-	if test -x $$qemu; then echo $$qemu; exit; fi; fi; \
-	echo "***" 1>&2; \
-	echo "*** Error: Couldn't find a working QEMU executable." 1>&2; \
-	echo "*** Is the directory containing the qemu binary in your PATH" 1>&2; \
-	echo "*** or have you tried setting the QEMU variable in conf/env.mk?" 1>&2; \
-	echo "***" 1>&2; exit 1)
+QEMU := qemu-system-i386
 endif
 
 # try to generate a unique GDB port
@@ -196,8 +187,10 @@ endif
 grade:
 	@echo $(MAKE) clean
 	@$(MAKE) clean || \
-	  (echo "'make clean' failed.  HINT: Do you have another running instance of JOS?" && exit 1)
-	./grade-lab$(LAB) $(GRADEFLAGS)
+	  (echo "'make clean' failed.  HINT: Do you havmake e another running instance of JOS?" && exit 1)
+	@echo This
+	@echo ./grade-lab$(LAB) $(GRADEFLAGS)
+	@python3 ./grade-lab$(LAB) $(GRADEFLAGS)
 
 handin: handin-check
 	@if test -n "`git config remote.handin.url`"; then \
