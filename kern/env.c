@@ -443,7 +443,12 @@ env_create(uint8_t *binary, size_t size, enum EnvType type)
     }  
   
     load_icode(e, binary, size);  
-    e->env_type = type;  
+	e->env_type = type;
+
+	if( type == ENV_TYPE_FS)
+	{
+		e->env_tf.tf_eflags |= FL_IOPL_MASK;
+	}
 }
 
 //

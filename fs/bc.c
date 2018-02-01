@@ -34,6 +34,14 @@ bc_pgfault(struct UTrapframe *utf)
 	//
 	// LAB 5: you code here:
 
+	addr = (void *)ROUNDDOWN(addr, PGSIZE);
+
+	if(( r = sys_page_alloc(0, addr, PTE_U | PTE_P| PTE_W)) < 0)
+	{
+		panic("pgalloc faile at %e\n", r);
+	}
+
+	ide_read(blockno * BLKSECTS, addr, BLKSECTS);
 }
 
 
